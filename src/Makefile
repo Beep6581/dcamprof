@@ -2,6 +2,7 @@ INSTALL_PREFIX = /usr/local
 DCAMPROF_VERSION = $(shell cat VERSION)
 CC = gcc
 CFLAGS = -Wall -std=c99 -g -O2 -D_XOPEN_SOURCE=600 -D__EXTENSIONS__ -fopenmp
+CFLAGS += $(OPTFLAGS)
 LDFLAGS = -fopenmp
 INCLUDE = -I.
 DEFINE =

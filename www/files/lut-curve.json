@@ -1,0 +1,13 @@
+{
+    "CurveType": "Spline",
+    "CurveHandles": [
+      [ 0,0 ],
+      [ 14,8 ],
+      [ 27,20 ],
+      [ 115, 118 ],
+      [ 229, 233 ],
+      [ 255, 255 ]
+    ],
+    "CurveMax": 255,
+    "CurveGamma": 1.8
+}

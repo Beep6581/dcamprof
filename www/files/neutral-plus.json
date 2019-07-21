@@ -1,0 +1,250 @@
+// This example configuration file contains a subtle custom subjective look for generic use.
+// It's called "Neutral+" as it's sort of meant to be a "better neutral" rather than some
+// distinct look.
+//
+// The adjustments should apply well on any base profile (that is we don't have microscopic
+// tunings of lightness and other things that would depend on the degree of relaxation or
+// precision of the base profile)
+//
+// What the look does:
+//  - longer rolloff to white in skin-tone range to improve look of high-key portraits
+//  - shorter rolloff to white in cyan-blue-magenta to improve color of skies
+//  - slight warmup of midtones and highs in greens and yellows for making sunlit
+//    areas stand out more in landscapes
+//  - slight saturation increase, skin-tones excluded as well as already highly saturated
+//    colors
+//  - slight reduction of green component in oranges to get better separation between
+//    greens and reds (for landscapes)
+//  - make neutrals more neutral (increases color "purity" and helps noise reduction)
+//  - compress the gamut towards AdobeRGB
+//
+
+{
+    // Configuration parameters for the neutral tone reproduction operator, most left at defaults
+
+    // Default configuration for ChromaScaling (-1 = auto), Curve, Saturated and Shadows
+    "ChromaScaling": -1,
+    "Curve": { "KeepFactor": 0.0, "LowChroma": 25, "HighChroma": 65 },
+    "Saturated": { "AdjustFactor": 0.92, "LowChroma": 35, "HighChroma": 60 },
+    "Shadows": { "AdjustFactor": 1.20, "AdjustFactorHighChroma": 1.08, "LowLightness": 0.15, "HighLightness": 0.50, "LowChroma": 25, "HighChroma": 40 },
+
+    // Rolloff has been reconfigured from default. We whiten skintone highlight range further,
+    // and we make rolloff shorter for cyan-blue-magenta to keep color higher up in skies
+    // We also make sure to keep configuration the same in the whole red-yellow-orange range
+    // with some margin to avoid damaging gradients in sunsets. Sunsets are rendered a bit whiter
+    // as a side effect of the skintone brightening - there's always a tradeoff.
+    "Rolloff": {
+        "KeepFactorHueCurve": {
+            "CurveType": "RoundedStep",
+            "CurveHandles": [ [0, 0.0], [60, 0.0], [90, 0.2], [150, 0.2], [180, 0.4], [270, 0.4], [300, 0.2], [330, 0.2], [345, 0.0], [360, 0.0] ]
+        },
+        "LowSatScaleHueCurve": {
+            "CurveType": "Linear",
+            "CurveHandles": [ [ 0,1.0 ], [ 360,1.0 ] ]
+        },
+        "HighSatScaleHueCurve": {
+            "CurveType": "RoundedStep",
+            "CurveHandles": [ [ 0,1.20 ], [ 360,1.20 ] ]
+        }
+    },
+
+    "GamutCompression": {
+        // Gamut compression is applied on the colorimetric data before the tone curve is applied as it works
+        // best on linear data. The curve and look operators (if any) may therefore push some colors out of
+        // gamut again. However, this function is not intended to have "mathematically exact" borders which
+        // is in any case not necessary as some clipping is generally desired for the best use of available
+        // gamut.
+
+        // Available gamuts:
+        //   "sRGB", "AdobeRGB", "ProPhotoRGB", custom matrix,
+        //   "Locus" (human observer locus), "ProPhotoRGB-Locus-Intersection"
+        //   (The D65 sRGB and AdobeRGB are remapped to D50 to match the ICC/DCP whitepoint)
+
+        // The with RGB Channel Limits we control how much overshoot we allow on RGB channels. To exactly fit
+        // withing gamut there should be no overshoots, that is 0 on low limit and 1 on high limit. This is
+        // usually not a good idea though as good tonality is still had with one or two channels clipped and
+        // we can achieve higher saturation allowing that.
+        "RGBChannelHighLimit": 10000000, // very large number, that is in practice no limit
+        "RGBChannelLowLimit": -0.005,
+
+        // Everything inside the inner gamut will be unchanged, here set to 60% of the maximum chroma of AdobeRGB
+
+        // Just for demonstration of the custom matrix feature we specify AdobeRGB with its RGB to XYZ matrix
+        // instead of using the "AdobeRGB" shortcut. The matrix which will automatically be remapped to D50
+        // whitepoint (AdobeRGB is D65).
+        //"InnerGamut": "AdobeRGB",
+        "InnerGamut": [
+           [  2.04159, -0.56501, -0.34473 ],
+           [ -0.96924,  1.87597,  0.04156 ],
+           [  0.01344, -0.11836,  1.01517 ]
+        ],
+        "InnerGamutChromaScale": 0.6, // 0.6 = the border is set at 60% of the inner gamut chroma range
+
+        // Everything outside the clip gamut will be hard-clipped (no compression)
+        "ClipGamut": "ProPhotoRGB-Locus-Intersection",
+        "ClipGamutChromaScale": 1.0,
+
+        // The range between inner gamut and clip gamut is compressed so the new clip edge
+        // becomes the edge of the destination gamut.
+        "DestinationGamut": "AdobeRGB",
+        "DestinationGamutChromaScale": 1.0
+    },
+
+    // Here follows a list of look operators that design a subjective look
+    "LookOperators": [
+        /*
+         Available operators:
+
+           AddHue
+           AddLightness
+           AddChroma
+           ScaleChroma
+           ScaleLightness
+           SetTemperature (WB temperature change with 5000K as reference)
+           Curves (RGB curves)
+           Stretch (expand/compress areas in the gamut)
+
+         Available X axes:
+           CIECAM02:
+             Lightness: 0 - 100 range lightness (J)
+             Chroma: 0 - open-ended chroma (C)
+             Hue: 0 - 360 hue (h)
+           Linear ProPhoto RGB-HSL, RGB-HSV:
+             HSL-Lightness: 0 - 100
+             HSL-Saturation: 0 - 100
+             HSL-Hue: 0 - 360
+             HSV-Value: 0 - 100
+             HSV-Saturation: 0 - 100
+             HSV-Hue: 0 - 360
+
+         Available interpolating curves:
+           Spline
+           Linear
+           RoundedStep
+
+        */
+
+        { // Warmup midtones and highlights in yellows and greens for more punch in landscape scenes with golden light
+            // Reference temperature (no change temperature) is always 5000K 0 tint.
+            "Operator": "SetTemperature", "TempTint": [ 5400, 5 ],
+            "BlendRGB": true, // RGB blending (instead of default JCh) used here as it gives better result for this operator (tested by eye by looking at gradient render)
+            "Blend": [
+                {
+                    "X": "Hue",
+                    "XRange": [ 70, 200 ],
+                    "YScale": 1,
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 0 ], [ 0.3, 1 ], [ 0.7, 1 ], [ 1, 0 ] ]
+                    }
+                }
+                ,
+                {
+                    "X": "Lightness",
+                    "Y": "Scale",
+                    "XRange": [ 0, 100 ],
+                    "Curve": {
+                       "CurveType": "Spline",
+                       "CurveHandles": [ [0,0], [0.154034,0.0342298], [0.278729,0.232274], [0.413203,0.770171], [0.581907,0.973105], [1,1] ]
+                    }
+                }
+                ,
+                { // limiter to avoid DCP LUT hue discontinuity issues, and make a smoother rolloff to white
+                    "X": "HSV-Saturation",
+                    "XRange": [ 0, 15 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,0], [1,1] ]
+                    }
+                }
+            ]
+        }
+        ,
+        { // Overall saturation increase, but excluding red/hue range to not hurt skintones, and also excluding already highly saturated colors
+            "Operator": "ScaleChroma",
+            "Value": 1.05,
+            "Blend": [
+                {
+                    "X": "Hue",
+                    "XRange": [ 70, 300 ],
+                    "YScale": 1,
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 0 ], [ 0.1, 1 ], [ 0.9, 1 ], [ 1, 0 ] ]
+                    }
+                },
+                {
+                    "X": "Chroma",
+                    "XRange": [ 40, 70 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 1 ], [ 1, 0 ] ]
+                    }
+                }
+            ]
+        }
+        ,
+        { // Increase magenta slightly (=reduce green) in orange to get more separation between low saturation greens and reds
+           "Operator": "Curves",
+           "CurvesGamma": "sRGB",
+           "KeepLightness": true,
+           "Curves": [
+              { "CurveType": "Linear", "CurveHandles": [[0, 0],[1, 1]] },
+              { "CurveType": "Spline", "CurveHandles": [[0, 0],[0.50, 0.49],[1, 1]] },
+              { "CurveType": "Linear", "CurveHandles": [[0, 0],[1, 1]] }
+           ],
+            "Blend": [
+                {
+                    "X": "Hue",
+                    "XRange": [ 40, 80 ],
+                    "YScale": 1,
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 0 ], [ 0.35, 1 ], [ 0.65, 1 ], [ 1, 0 ] ]
+                    }
+                },
+                { // avoid disturbing neutrals
+                    "X": "HSV-Saturation",
+                    "XRange": [ 5, 15 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,0], [1,1] ]
+                    }
+                }
+                ,
+                { // fade out for high saturation
+                    "X": "Chroma",
+                    "XRange": [ 10, 50 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,1], [1,0] ]
+                    }
+                }
+            ]
+        }
+        ,
+        { // Make neutrals more neutral, exclude bright ones though to not hurt rolloff into sun
+            "Operator": "ScaleChroma",
+            "Value": 0.90, // this is a bit stronger than it seems to also counteract the chroma increase we did above
+            "Blend": [
+                {
+                    "X": "HSV-Saturation",
+                    "XRange": [ 10, 20 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,1], [1,0] ]
+                    }
+                }
+                ,
+                {
+                    "X": "HSV-Value",
+                    "XRange": [ 60, 80 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,1], [1,0] ]
+                    }
+                }
+            ]
+        }
+    ]
+}

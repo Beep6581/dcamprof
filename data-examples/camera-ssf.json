@@ -1,0 +1,32 @@
+// This example data comes from http://www.cis.rit.edu/jwgu/research/camspec/db.php
+{
+  // camera name, should preferably match established manufacturer and model
+  // name used by raw converters
+  "camera_name": "Canon EOS 5D mark II",
+
+  // bands in nanometers, described the same way as for spectrum format
+  "ssf_bands": [ 400, 720, 10 ], // 400nm to 720nm in an interval of 10nm
+
+  // Response functions for red, green and blue. Scaling for the responses
+  // must be the same for all three, but it does not matter what it is, as
+  // the response will be normalized before use. Setting the maximum to 1.0
+  // is typical.
+  "red_ssf": [
+    0.0019, 0.0045, 0.0103, 0.0055, 0.0034, 0.0021, 0.0023, 0.0039, 0.0073,
+    0.0118, 0.0179, 0.0612, 0.0874, 0.1534, 0.1686, 0.1724, 0.2003, 0.3158,
+    0.4514, 0.5258, 0.5989, 0.4728, 0.4084, 0.3562, 0.2920, 0.2260, 0.1704,
+    0.1372, 0.0428, 0.0087, 0.0017, 0.0007, 0.0005
+  ],
+  "green_ssf": [
+    0.0036, 0.0123, 0.0377, 0.0422, 0.0565, 0.0704, 0.097,  0.209,  0.43,
+    0.6381, 0.692,  1,      0.8735, 0.9058, 0.8326, 0.8057, 0.712,  0.6467,
+    0.5426, 0.3935, 0.2958, 0.1287, 0.06,   0.0402, 0.0276, 0.0182, 0.0138,
+    0.0143, 0.0061, 0.0017, 0.0008, 0.0006, 0.0005
+  ],
+  "blue_ssf": [
+    0.0127, 0.0971, 0.3516, 0.4765, 0.56,   0.6476, 0.7745, 0.6759, 0.6858,
+    0.5932, 0.3971, 0.3559, 0.1617, 0.0883, 0.0551, 0.0424, 0.0269, 0.0205,
+    0.01659,0.0122, 0.01,   0.0054, 0.0036, 0.0032, 0.0029, 0.0032, 0.0032,
+    0.0034, 0.0013, 0.0005, 0.0004, 0.0004, 0.0004
+  ]
+}

@@ -1,0 +1,15 @@
+// Tone curves can be specified in the transfer function format, RawTherapee's .rtc format (srgb gamma spline),
+// JSON DCP tone curve, and this more generic spline curve format
+{
+    "CurveType": "Spline", // must always be spline
+    "CurveHandles": [
+      [ 0,0 ],
+      [ 14,8 ],
+      [ 27,20 ],
+      [ 115, 119 ],
+      [ 230, 233 ],
+      [ 255, 255 ]
+    ],
+    "CurveMax": 255,
+    "CurveGamma": 1.8 // use the string "sRGB" to specify the special sRGB gamma.
+}

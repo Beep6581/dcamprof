@@ -1,0 +1,19 @@
+// Layout specification for X-Rite ColorChecker SG
+// Can be used for flat-field correction and glare modeling
+{
+   "RowCount": 10,
+   "ColCount": 14,
+   "RelativeRowHeight": 1.0,
+   "RelativeColWidth": 1.0,
+   "HasColOffset": false,
+
+   "WhitePatches": [
+      "A01", "A04", "A07", "A10", "D01", "D10", "E05", "G01", "G10", "J01", "J10", "N01", "N04", "N07", "N10"
+   ],
+   "BlackPatches": [
+      "A02", "A05", "A08", "C01", "C10", "E06", "F01", "F10", "I01", "I10", "L01", "L10", "N03", "N06", "N09"
+   ],
+   "MiddleGrayPatches": [
+      "A03", "A06", "A09", "B01", "B10", "E01", "E10", "H01", "H05", "H10", "K01", "K10", "N02", "N05", "N08"
+   ]
+}

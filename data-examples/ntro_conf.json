@@ -1,0 +1,86 @@
+// Configuration for the neutral tone reproduction operator
+{
+    // The base chroma scaling factor which then is further refined based on the following sections.
+    // If a negative value it will be auto-generated from analysis of the tone curve. Higher contrast
+    // require a higher scaling. Typical S-curves need something like 1.13 ChromaScaling value.
+    "ChromaScaling": -1,
+
+    // This section controls the mix between a RGB-HSV-derived luminance curve (DCP/Adobe type) and a pure luminance curve
+    "Curve": {
+        // The curve is always applied in the luminance channel, but the output luminanince can be derived from a
+        // RGB-HSV curve, meaning that the resulting lightness will then be the same as a pure RGB-HSV curve.
+        // For low saturation colors there's often a perceptual advantage of using the RGB-HSV curve, otherwise the shadow
+        // dip of an S-curve may look too dark and a bit dull. For high saturation colors the RGB-HSV curve causes tone
+        // compression (especially in the red range), ie poor tone separation and a less realistic look.
+        // Therefore we here control a transition from the RGB-HSV curve to a pure luminance curve based on chroma of
+        // input color.
+
+        // Factor to keep of RGB-HSV curve above high chroma (1.0 = 100%).
+        "KeepFactor": 0.0,
+
+        // Colors with lower chroma than LowChroma will use the RGB-HSV curve
+        "LowChroma": 25,
+
+        // Colors with higher chroma than HighChroma use KeepFactor of the RGB-HSV curve and a pure luminance curve
+        // for the rest
+        "HighChroma": 65
+    },
+
+    // This section controls dampening of saturation of high saturation colors
+    "Saturated": {
+        // Factor which ChromaScaling is multiplied with if input color has higher chroma than HighChroma. Should be
+        // smaller than one, otherwise high saturation colors will likely look over-saturated.
+        "AdjustFactor": 0.92,
+
+        // Colors with lower chroma than LowChroma this will not be affected
+        "LowChroma": 35,
+
+        // Colors with higher chroma than HighChroma will get the full AdjustFactor applied. Inbetween LowChroma
+        // and HighChroma there is a soft transition.
+        "HighChroma": 60
+    },
+
+    // This section controls increase of saturation of dark colors
+    "Shadows": {
+        // Factor which ChromaScaling is multiplied with if input color has lower lightness than LowLightness. Should be
+        // larger than one, otherwise dark colors will likely look under-saturated. For high chroma colors the adjustment
+        // should be smaller, controlled by AdjustFactorHighChroma.
+        "AdjustFactor": 1.20,
+        "AdjustFactorHighChroma": 1.08,
+
+        // Colors with lower lightness than this (sRGB gamma scale) will get the full AdjustFactor applied.
+        "LowLightness": 0.15,
+
+        // Colors with highter lightness than this will not be affected. Between LowLightness and HighLightness there is
+        // a soft transition.
+        "HighLightness": 0.50,
+
+        // Colors with lower chroma than LowChroma get the base AdjustFactor, above HighChroma it's the high chroma
+        // version applied, with a transition inbetween.
+        "LowChroma": 25,
+        "HighChroma": 40
+    },
+
+    // This section controls desaturation during rolloff towards the whitepoint (clipping)
+    "Rolloff": {
+        // For the typical S-curve a normal RGB-HSV curve will desaturate over a broad range towards clipping, while
+        // the original (no rolloff) color is kept more saturated. The RGB-HSV S are divided, if more than 1.00 the
+        // original color is less saturated than the rolloff color, otherwise the other way around.
+
+        // How much of the original color (generally more saturated) to keep above high limit. Can be adjusted per RGB-HSV Hue
+        "KeepFactorHueCurve": {
+            "CurveType": "Linear",
+            "CurveHandles": [ [ 0,0.20 ], [ 360,0.20 ] ]
+        },
+        // Below LowSatScale no rolloff is made, that is the original color is kept
+        "LowSatScaleHueCurve": {
+            "CurveType": "Linear",
+            "CurveHandles": [ [ 0,1.00 ], [ 360,1.00 ] ]
+        },
+        // Above HighSatScale the chroma of the RGB-HSV curve is used. Inbetween Low and High there is a soft transition.
+        "HighSatScaleHueCurve": {
+            "CurveType": "Linear",
+            "CurveHandles": [ [ 0,1.20 ], [ 360,1.20 ] ]
+        }
+    }
+}

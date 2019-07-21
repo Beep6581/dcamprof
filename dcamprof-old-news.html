@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, width=device-width">
+
+    <title>DCamProf News Archive</title>
+
+    <style>
+body {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 1em;
+    background-color: #bebebe;
+}
+h1 { font-family: Arial, Helvetica, sans-serif; font-weight: bold; font-size: 2em; margin: .67em 0 }
+h2 { font-family: Arial, Helvetica, sans-serif; font-size: 1.5em; margin: .75em 0 }
+h3 { font-family: Arial, Helvetica, sans-serif; font-size: 1.17em; margin: .83em 0 }
+h4 { font-family: Arial, Helvetica, sans-serif; font-style: italic; margin: 1.12em 0 }
+p { margin: 1.12em 0; }
+pre {
+  overflow:auto;
+}
+.tt {
+  font-family: 'Lucida Console', monospace;
+}
+.figtext { font-family: Arial, Helvetica, sans-serif; font-size: 0.8em; hyphens: auto }
+#document {
+  max-width: 50em;
+  margin: auto;
+}
+a:link { color: #1c37b6; }
+a:visited { color: #1c37b6; }
+a:hover { color: #122478; }
+    </style>
+
+  </head>
+
+<body>
+
+<div id="document">
+
+<h2>DCamProf news archive</h2>
+<p>
+<a href="dcamprof.html">Main DCamProf page</a>.
+<p>
+<strong>2016-05-07</strong><br>
+Version 0.10.5, changes:
+<ul>
+  <li>Improved extreme colors handling, which should solve problems with artificial colored lights (disco lights etc), as usual in the blue/purple range.
+  <li>Added <code>-k</code> parameter to make-profile command to control
+  compression of extreme range values.
+  <li>Added data file for CC24 produced after November
+  2014, <code>cc24_ref-new.cie</code>.
+</ul>
+
+<strong>2015-11-09</strong><br>
+Version 0.10.4, changes:
+<ul>
+  <li>Added new command <a href="#si-render">si-render</a>, which is
+  used to render a normal RGB TIFF from a spectral image. This can be
+  used to test differences between observers and CATs, but also render
+  "virtual raws" (in TIFF format) if you have camera SSFs. Those files
+  can then be processed by test-profile.
+  <li>Added "KeepLightness" option to Curves look operator if you want
+  to avoid that a hue adjustment realized with curves affects
+  lightness as side effect.
+  <li>Fixed dual-illuminant rendering bug in test-profile.
+  <li>Don't test glare in make-profile when camera SSF is used.
+</ul>
+
+<strong>2015-10-30</strong><br>
+Version 0.10.3, changes:
+<ul>
+  <li>Remade glare handling in testchart-ff code, works much better
+    now. The approach is different and more
+    robust, <a href="#glare_matching">matching glare</a>
+    in reference values instead of linearizing camera raw values.
+  <li>Now possible to do flatfield and glare matching directly in
+    the make-profile command using the <code>-g</code> parameter.
+  <li>Added target layout files for both CC24 and the ColorChecker SG
+    which are used with the new glare matching feature.
+  <li>Added reference files for the ColorChecker SG, two versions, one
+    for pre November 2014 and one for newer targets.
+  <li>Added a note that X-Rite changed their formulas (colors)
+    slightly for their ColorCheckers in November 2014. Be careful to
+    use a reference that matches your target!
+</ul>
+
+<strong>2015-10-27</strong><br>
+Version 0.10.2, changes:
+<ul>
+  <li>A few improvements of the tone reproduction operator, including
+  one important (the shadow over-saturation fix):
+    <ul>
+      <li>Fixed shadow over-saturation, mostly affecting dark blue
+      colors. The fix included adding a chroma rolloff to the shadow
+      saturation boost, so the tone reproduction configuration has
+      expanded with three more parameters.
+      <li>Limit high chroma desaturation to the inverse of the
+      contrast-related base chroma scaling (as it does not make sense
+      to reduce chroma from original).
+      <li>Special handling of the deep blue range: decrease chroma
+      scaling faster and more than other colors.
+      <li>Adjusted luminance weight tuning for high saturation
+      blues. Now it only affects blues (not reds) and with a stronger
+      effect.
+    </ul>
+  <li>Test-profile can now <a href="#test_image">process a provided
+  tiff image</a>, which can be useful when designing a look.
+  <li>Test-profile's built-in test gradient is slightly different due
+  to a code cleanup / simplification.
+  <li>Included a <code>nil-profile.json</code> in the data-examples
+  directory, useful when processing test images via test-profile when
+  designing looks.
+</ul>
+<p>
+
+<strong>2015-10-25</strong><br>
+Version 0.10.1: hotfix for a rolloff bug in the tone reproduction
+operator causing oversaturated skies among other things.
+<p>
+
+<strong>2015-10-23</strong><br>
+Version 0.10.0, changes:
+
+<ul>
+  <li>Some rework to better handle extreme value range ("out of
+  gamut"). This makes profiles perform much better in scenes with
+  "extreme" colors such as narrow band artificial lights (typical in
+  city nightscapes).
+    <ul>
+      <li>Out of gamut values in the colorimetric base profile are no
+      longer clipped, but instead compressed into gamut (some minor
+      residual clipping can be left).
+      <li>DNG profile specific <a href="#cm_and_fm">LUT matrix</a> to
+      avoid clipping in the DNG profile pipeline.
+      <li>Improved gamut compression algorithm in the tone
+      reproduction operator. This is still the only user-tunable
+      aspect of gamut compression.
+      <li>A whole new section in the documentation that describes
+        handling of <a href="#extreme_colors">extreme colors</a>.
+    </ul>
+  <li>As a side-effect of the extreme value handling, weighting
+  behavior unfortunately had to be changed so this version doesn't
+  just add features, it changes behavior too.
+    <ul>
+      <li>No longer possible to affect L/C/h weighting for matrix
+      optimization, the reason being that it really did not have any
+      strong or predictable effect (eg best result is had with no
+      weighting).
+      <li>Now possible to limit the matrix value range (<code>-y</code>,
+      typically used to limit blue channel subtraction to minimize the
+      strength of gamut compression required. This can have a strong
+      effect, use with care. Still the default value is set to -0.2 to
+      avoid generating unstable matrices on problematic cameras. Those
+      cameras will then per default render blues too light, but it's a
+      tradeoff. Read more in <a href="#make_profile_deep_blue">deep
+      blue handling</a>.
+      <li>Max acceptable L/C/h DE range can now be specified for the
+      LUT, which makes it easier than before to get desired relaxation
+      effect.
+      <li>The regularization parameter (<code>-l</code>) is no longer what
+      it was, now it's used for LUT DE range specification. The old
+      behavior doesn't have any use as the thin plate splines are now
+      anchored to the gamut limit and regularization would relax
+      anchors too which would break gamut compression. Relaxation can
+      be achieved with the normal DE relax parameters.
+      <li>The <a href="#weighting">weighting documentation</a> has been
+      rewritten to match the new behavior.
+    </ul>
+  <li>If no weighting parameters are specified to make-profile the new
+  default is now automatic "suitable" amount of relaxation. The
+  purpose being easier to use for beginners, and really the old
+  default with no relaxation at all only makes sense for testing, not
+  real profiles.
+  <li>Some adjustments to the neutral tone reproduction operator:
+    <ul>
+      <li>Channel luminance is evened out a bit for ultra-high
+      saturation colors with low green content. This specifically
+      makes deep blues a bit lighter, can be observed in the CC24 C01
+      deep blue patch. This is a bit less accurate but improves
+      tonality.
+      <li>Minimize "fried egg" effect on sunsets by sacrificing some
+      hue stability in red-orange-yellow rolloff (near-clipping reds
+      become a bit more orange than before).
+      <li>Perceptual RGB clipping to minimize color shifts while
+      retaining saturation. Previous version had some color shift
+      issues.
+      <li>Avoid over-saturating ultra-high saturation colors.
+      <li>Overall better gradient behavior on rolloff towards
+      whitepoint of high saturation colors.
+    </ul>
+  <li>Now possible to adjust the reference values of a target using a
+  JSON configuration file (<code>-a</code> to make-profile). This allows
+  for powerful color corrections or subjective adjustments on the
+  colorimetric base profile, as a complement to optimization weighting
+  and the look operators.
+  <li>Fixed various clipping bugs that could show as problems in
+  extreme color ranges.
+  <li>LUT table indexing/naming was broken in the native profile
+  format. I've fixed this now when format compatibility has been
+  broken anyway due to new weighting/compression.
+  <li>When outputting a DNG or ICC profile directly from make-profile
+  it's now possible to also provide a tone-curve using the <code>-t</code>
+  parameter.
+  <li>The maximum chromaticity is now limited to the union between
+  locus and ProPhotoRGB. Gamut compression takes place in the
+  colorimetric stage to enforce this with as little clipping as
+  possible. This might seem as a limitation, but profile formats are
+  already a bit limited in this regard and cameras (and color models)
+  are not really up to the task of handling colors <i>accurately</i>
+  in that extreme range. Focus is instead to produce smooth gradients
+  etc to get "good looking" results in this range, rather than trying
+  to achieve accuracy which is a lost cause anyway.
+  <li>Added <code>-g</code> parameter to make-dcp and make-icc. With that
+  you can choose a gamut compression configuration without having to
+  write one in the tone reproduction operator configuration file.
+  <li>Make-dcp will now per default embed the special LUT matrix to
+  avoid clipping issues, instead of the normal forward matrix (if it's
+  a LUT profile). If you want the normal forward matrix embedded
+  provide the <code>-E</code> flag.
+  <li>The mild compression made in the colorimetric stage actually
+  makes the base LUT 3D. The difference from a 2.5D LUT is very tiny
+  though so make-dcp still makes 2.5D HueSatMap per default. A 3D LUT
+  can be enabled with the <code>-D</code> flag.
+  <li>Added RGB channel limit configuration to gamut compression
+  algorithm for finer control of the result.
+  <li>Made it possible to provide custom matrices for gamut
+  compression (that is if you want to specify something else than
+  "sRGB", "AdobeRGB" or "ProPhotoRGB")
+  <li>Changed <code>-m</code> parameter of make-profile to import all
+  three matrices instead of just the color matrix. If you want to
+  import the color matrix only <code>-p</code> is used instead.
+  <li>Make-profile now prints patch matching reports per class (if the
+  target is split into classes). This is useful when tuning weights
+  per class.
+  <li>Test-profile command will now auto-add (unless -T) Adobe's
+  default tone curve to DNG profiles lacking it, just like ACR does.
+  <li>Test-profile now prints clipping stats when test gradient is
+  written.
+  <li>You can force-exclude the DNG profile LookTable in test-profile
+  using -P.
+  <li>While the ICC LUT generator in itself hasn't changed much, the
+  improved extreme value handling means the ICC LUT generator
+  generally no longer needs to make up values and apply smoothing.
+  <li>Fixed JSON spectrum scale parameter parsing bug.
+  <li>A number of new gamut files can be generated for plotting
+  (showing LUT and matrix coverage in a chromaticity diagram).
+</ul>
+
+<strong>2015-09-29</strong><br>
+Version 0.9.13, changes:
+
+<ul>
+  <li>Fixed clipping bug in tone reproduction operator.
+  <li>Reworked gamut compression, it works slightly differently now
+  and the configuration is moved away from look operators and instead
+  a global setting.
+  <li>Added plot data for matrix only
+  correction <code>target-mtx*.dat</code>. These can be useful when making
+  a matrix-only profile, or specifically targeting matrix optimization
+  with various weighting options.
+  <li>Made more elements of the native profile format optional, to
+  make hand-edits simpler.
+  <li>Now the <code>-m</code> make-dcp parameter (copy illuminants to
+  avoid Adobe-style WB shift) will convert a single-illuminant profile
+  to dual-illuminant if the WB profile is dual-illuminant. This is
+  needed to make a perfect WB match.
+</ul>
+
+<strong>2015-09-26</strong><br>
+Version 0.9.12, changes:
+
+<ul>
+  <li>Improved smoothing of out-of-gamut entries of ICC LUT profiles,
+  especially when a curve is embedded (it didn't work well before).
+  <li>Added <code>-k</code> and <code>-x</code> parameters to make-target
+  command for more flexible control of which patches to include and
+  exclude when merging patch sets.
+</ul>
+
+<strong>2015-09-17</strong><br>
+Version 0.9.11, changes:
+
+<ul>
+  <li>Hopefully the bad stuff in the 0.9.8 - 0.9.10 releases should be
+  out of the way now.
+  <li>Extended gamut compression configuration with a limiter to make
+  smoother transitions into clipping. Vital to render good sunsets.
+  <li>Fixed tone reproduction operator clipping bug that was
+  introduced in 0.9.8.
+  <li>Replaced 90,30,15 DCP LUT division default with 90,30,30 as the
+  former was a bit too low density for the neutral tone reproduction
+  operator.
+    <ul>
+      <li>DCamProf DNG profiles with the tone operator indeed becomes
+      quite large (about 1.5 megabytes), but this high resolution is
+      required to properly counter-act the negative effects of the DNG
+      curve over the whole range. If it was possible to apply a curve
+      in the LUT itself (like it is for ICC) it could be
+      smaller. Don't blame me.
+    </ul>
+</ul>
+
+<strong>2015-09-16</strong><br>
+Version 0.9.10, changes:
+
+<ul>
+  <li>Added gamut compression feature to look operators.
+</ul>
+
+Known serious bug: I've become aware that there are some pretty
+severe issues with the neutral tone reproduction operator and indeed
+this new gamut compression feature around the sun in sunset
+pictures, due to that the transition into clipping does not work
+well. I'm looking into fixing this and will release a new version as
+soon as possible. Linear profiles are unaffected.
+<p>
+This bug has been introduced sometime in the last versions, so until
+I've fixed this I recommend using
+version <a href="files/dcamprof-0.9.7.tar.bz2">DCamProf v0.9.7</a>.
+<p>
+DCamProf is new software and may contain serious bugs like this that I
+have missed in my testing. If you discover a bug like this I'm very
+grateful if it's reported back to me so I become aware of it and can
+fix it.
+<p>
+
+<strong>2015-09-14</strong><br>
+Version 0.9.9, changes:
+
+<ul>
+  <li>Refinement of the neutral tone reproduction operator adjustment
+  made in 0.9.8: now there is a mix between an RGB-HSV curve and pure
+  luminance curve for optimal perceptual look between low saturation
+  colors (RGB-HSV luminance) and high saturation colors (pure
+  luminance).
+    <ul>
+      <li>This mix can be adjusted in the via the tone reproduction
+      operator configuration. If you have a configuration file from
+      previous versions you need to add a "Curve" section, see the
+      example file to get the default values.
+    </ul>
+  <li>Can now directly parse IT8.7/2 CGATS text format, which you can
+  get with Wolf Faust's IT8 targets for example.
+</ul>
+
+<strong>2015-09-13</strong><br>
+Version 0.9.8, changes:
+
+<ul>
+  <li>Adjusted neutral tone reproduction operator to get better tone
+  separation of high saturation colors. Look change of normal
+  saturation colors is minimal.
+  <li>Fixed parallelism bug in ICC LUT code causing slightly varying
+  results from run to run. This is non-critical, no need to
+  re-render.
+  <li>Abort instead of just warn if transfer function is missing when
+  it's expected to be there (minimizes risk of doing mistakes in
+  Capture One workflow).
+</ul>
+
+<strong>2015-09-06</strong><br>
+Version 0.9.7, changes:
+
+<ul>
+  <li>Yet some reworking of the ICC LUT code to fix bad shadows.
+  <li>When extracting tone curves from transfer functions, tiff-tf
+  will now also compensate non-zero starting points (unless it's a big
+  offset, then it's considered a part of the curve design and not
+  compensated). This is only a "mathematical cleanup", won't have
+  visible effect on profiles so you don't need to re-generate.
+  <li>You can now run <code>dcamprof -v</code> to get the version.
+</ul>
+
+<strong>2015-09-05</strong><br>
+Version 0.9.6, changes:
+
+<ul>
+  <li>Fixed critical ICC LUT bug which caused bad shadows with the
+  neutral tone reproduction operator.
+</ul>
+
+<strong>2015-09-03</strong><br>
+Version 0.9.5, changes:
+
+<ul>
+  <li>Smarter illuminant copying when using the <code>-m</code> parameter
+  for make-dcp.
+  <li>Exclude lightness (or chromaticity) from CIEDE2000 comparison in
+  LUT generation when using <code>-l</code> with negative parameters
+  (make-profile). This increases the relaxation effect a little.
+  <li>Added <code>-E</code> flag to match-spectra to force spectra as
+  emissive.
+  <li>I've now written a
+  separate <a href="http://www.ludd.ltu.se/~torger/photography/camera-profiling.html">tutorial</a>
+  article of how to make profiles using DCamProf. It's supposed to
+  complement the reference documentation found on this page.
+</ul>
+
+
+<strong>2015-08-28</strong><br>
+Version 0.9.4, changes:
+<ul>
+  <li>Reworked ICC LUT rendering, especially considering out of gamut
+  values to minimize artifacts for extreme white balance settings.
+  <li>Fixed critical icc2json Lab LUT bug (didn't work at all in
+  previous versions).
+  <li>Fixed so make-dcp now embeds linear curve per default again, as
+  it should.
+  <li>Added <code>-m</code> parameter to make-dcp which can be used to
+  avoid <a href="#dcp_wb_shift">avoid white balance shift</a> in Adobe
+  Lightroom when you change from an old to a new profile.
+  <li>Slight adjustment of test-profile illuminant handling and showed
+  information.
+  <li>Updated broken SSF database link on this page.
+</ul>
+
+<strong>2015-08-18</strong><br>
+Version 0.9.3, changes:
+<ul>
+  <li>The neutral tone reproduction operator highlight roll-off can now
+  be tuned differently per hue, which for example can be used to apply
+  a longer roll-off on skin-tones and shorter one landscape skies in
+  subjective profiles. The bundled look operators example has been
+  updated showing its use.
+  <li>Minor adjustment to the neutral tone reproduction highlight
+  roll-off mixing.
+  <li>It's now possible to extract tone curves through transfer
+  function comparison using the tiff-tf command. This can for example
+  be used if you want to extract a tone curve in a Capture One
+  workflow.
+  <li>Integer curves (as transfer functions are) now get their
+  truncated values reconstructed per default.
+  <li>Added another JSON format for tone curves, so you can specify
+  splines with any gamma. This can be useful when you design a curve
+  inside the raw converter using its curve tool. If you know what
+  gamma it's using and the coordinates are retrievable you can convert
+  it to a JSON format tone curve and use it in your DCamProf
+  workflow.
+  <li>Now possible to cascade tone curves in make-icc and make-dcp
+  commands.
+  <li>Further updates to the <a href="#workflow_icc">ICC workflow</a>
+  documentation, specifically for Capture One users showing how the
+  new features can be used to design a profile with the same
+  properties as native Capture One profiles.
+  <li>You can now skip applying the curve directly to the LUT in the
+  make-icc command, using the <code>-T</code> flag. This would be used for
+  raw converters that apply the curve after the ICC profile. I don't
+  really know if there exists any, but anyway if you would need it you
+  can now do it.
+</ul>
+<strong>2015-08-14</strong><br>
+Version 0.9.2, changes:
+<ul>
+  <li>Tested making an ICC profile for Capture One (was a while ago),
+  and made slight updates to the docs accordingly.
+  <li>Improved ICC LUT rendering, which now avoids a "black hole" in
+  the extreme blue area (caused by XYZ space clipping), which could
+  cause extreme blues become black.
+    <ul>
+      <li>The black hole can still be observed in DNG profiles, but
+      due to the the different LUT design in DNG profiles the blues
+      are not pushed into that undefined area for real images so I
+      haven't yet found a reason to fix it there. The black hole is in
+      actuality no error, it's outside the human gamut and undefined
+      in XYZ space which then clips to zero.
+    </ul>
+  <li>Updated basic workflow docs to show the use of the neutral tone
+  reproduction operator, and some basic LUT relaxation recipes.
+  <li>Fixed a minor blending bug in the look operators.
+</ul>
+
+<strong>2015-08-11</strong><br>
+Version 0.9.1, changes:
+<ul>
+  <li>The target patch matching reports now also come as
+  16 bit ProPhoto <a href="#image_files">TIFF images</a>, so you can
+  by eye see how large the mismatch is. This makes it easier to get a
+  quick overview of matching performance than just reading pure text
+  reports.
+  <li>Now possible to run test-profile without a target (to just get
+  plots etc).
+  <li>Test-profile will in dump mode now output a gradient TIFF
+  processed through the profile, so you can <a href="#test_gradient">diagnose LUT
+  smoothness</a>. This is especially useful when designing a
+  subjective look to verify that your look operators don't mess with
+  the smoothness too much.
+  <li>The make-dcp command will now test
+  for <a href="#dcp_hue_shift_discontinuity">hue shift
+  discontinuity</a>, and will abort (per default) if it detects it.
+  <li>Extended look operators functionality with RGB-HSV and RGB-HSL
+  color spaces, which may work better in various clipping scenarios.
+</ul>
+
+<strong>2015-08-05</strong><br>
+Version 0.9.0, changes:
+<ul>
+  <li>DCamProf now supports making DNG and ICC profiles with
+  subjective looks, as described in the <a href="#dcp_lookop">look
+  design</a> documentation for the make-dcp command.
+    <ul>
+      <li>This feature is intended for subtle fine-tuning of the
+      accurate look rather than making "Instagram" type of filters.
+    </ul>
+  <li>A new section about <a href="#subjective_looks">subjective
+  looks</a> in the documentation.
+</ul>
+
+<strong>2015-07-29</strong><br>
+Version 0.8.4, changes:
+<ul>
+  <li>Now possible to disable lightness (or chromaticity) part of the
+  LUT when making a profile, using negative relax parameters. This can
+  be useful when making robust profiles.
+</ul>
+
+<strong>2015-07-26</strong><br>
+Version 0.8.3, changes:
+<ul>
+  <li>Reworked tone reproduction operator.
+    <ul>
+      <li>While code changes are quite large, the principle is the
+      same as the old one and the result is very similar.
+      <li>Smoother transition into clipping, better curve analysis,
+      fixed "grayness" issue in the shadow areas.
+      <li>Some extra focus on tuning for skin tone rendering.
+      <li>It's based on the same code as for the upcoming "Perceptual"
+      curve in the RawTherapee project which I have contributed, with
+      the help of expert eyes from members of the RawTherapee team.
+    </ul>
+  <li>Now possible to customize the neutral tone reproduction operator
+  via a JSON configuration file.
+  <li>The tone curve will be dumped to the report directory
+  (<code>tc.dat</code> and <code>tc-srgb.dat</code>)
+</ul>
+
+<strong>2015-07-06</strong><br>
+Version 0.8.2, changes:
+<ul>
+  <li>Added tone reproduction operator support to ICC profiles, that
+  is same functionality as previously available only for DNG profiles.
+  <li>Added a small section in the documentation
+  about <a href="#matrix_and_tc">tone curves for matrix-only profiles</a>.
+</ul>
+
+<strong>2015-07-03</strong><br>
+Version 0.8.1, changes:
+<ul>
+  <li>Fixed fatal bug in neutral tone reproduction operator
+  <li>Added scaling roll-off to avoid over-saturated extreme highlights
+  in neutral tone reproduction operator.
+</ul>
+
+<strong>2015-06-26</strong><br>
+Version 0.8.0, changes:
+<ul>
+  <li>Dropped the -k parameter and instead added a proper tone
+  reproduction operator to make-dcp command. Now you can
+  apply a subjective contrast curve without the color shift and
+  over-saturation of the standard RGB curves. I intend to add the
+  functionality to make-icc later, but it's not available in this
+  release.
+    <ul>
+      <li>The neutral tone reproduction operator provided in this
+      release is an early release, it's likely I will tune it further
+      in coming releases.
+    </ul>
+  <li>Now possible to provide custom curves to make-dcp and make-icc.
+  <li>Added a new section on <a href="#tone_curves">tone curves</a>,
+  which I think is an important read as tone curves fundamentally
+  affect color reproduction. The section has several example pictures
+  that give insight into the effect of tone curves and profiles.
+  <li>Changed transfer function parameter -t to -f, as tone
+  reproduction took over -t (and added -T and -o).
+  <li>Common tags like copyright strings and description can now be
+  set directly from the command line for the make-dcp and make-icc
+  commands.
+  <li>Include DefaultBlackRender=none for DNG profiles, to avoid
+  automatic black-level adjustment in some converters. If you're a
+  Lightroom user you're probably used to automatic black level
+  adjustment and may want it, if so provide the -B parameter to
+  make-dcp.
+  <li>Fixed bug that caused incorrect parsing of 3D DNG LUTs.
+  <li>DNG 3D LUTs can now be plotted.
+  <li>make-dcp command now takes three values for the -h parameter,
+  that is value divisions was added to support 3D LUTs.
+  <li>Improved scaling and normalization algorithm in match-spectra
+  command for better matching.
+  <li>Added standard illuminants D55 and D75 to the built-in spectral
+  database.
+  <li>Transposed built-in CC24 data set so it's 4 rows with 6 columns
+  rather than the other way around (to match Argyll's CC24 layout).
+</ul>
+
+<strong>2015-06-09</strong><br>
+Version 0.7.4, changes:
+<ul>
+  <li>Added possibility to adjust chroma of reference values (-k
+  parameter to make-target, make-profile and test-profile), useful to
+  compensate look for profiles intended for strong tone curves.
+  <li>Changed default: make-dcp now sets a linear curve per default.
+</ul>
+
+<strong>2015-06-07</strong><br>
+Version 0.7.3, a quick update due to some bad bugs introduced in 0.7.2:
+<ul>
+  <li>Fixed bug in TIFF flatfield correction that could cause
+  over-exposure.
+  <li>Fixed bug causing mix up of -C and -S flags in make-profile and
+  test-profile.
+  <li>Made it possible to totally exclude a class from matrix
+  optimization by assigning weight zero.
+  <li>Made it possible to address class name in exclude list, useful
+  when patches are named the same in different classes.
+  <li>The LUT now takes the CIEDE2000 kL/C/H weights into account.
+</ul>
+
+<strong>2015-06-05</strong><br>
+Version 0.7.2, changes:
+<ul>
+  <li>I've added a fairly large section in the documentation which
+  describes <a href="#camera_cat">chromatic adaptation
+  transforms</a>. I think it's an important aspect of profiling if you
+  make a profile for some other illuminant than D50, so do read it.
+  <li>CAT is now enabled per default so the <code>-C</code> option to
+  make-target, make-profile and test-profile has now inverted
+  meaning.
+  <li>Added <code>-S</code> parameter to make-target, make-profile and
+  test-profile which enables rendering of virtual spectra if spectra
+  is missing in the target, this generally improves the performance of
+  the relighting transform.
+  <li>For quick workflows you can now directly write .dcp and .icc
+  from the make-profile command. To support this the <code>-c</code>
+  option for camera name was renamed to <code>-n</code> to work in all
+  three commands.
+  <li>I've done a lot of testing concerning glare-related measurement
+  errors, resulting in some new recommendations in the documentation.
+  <li>Added linearization feature to testchart-ff, using
+  the <code>-L</code> flag, which in some circumstances can reduce the
+  effect of glare.
+  <li>Added possibility to add a distributed step wedge to
+  self-generated targets, using the <code>-g</code> parameter.
+</ul>
+
+<strong>2015-05-30</strong><br>
+Version 0.7.1, changes:
+<ul>
+  <li>Added new
+  command <a href="#average-targets">average-targets</a>, useful if
+  you want to reduce noise in measurements.
+  <li>Added new
+  command <a href="#match-spectra">match-spectra</a>, useful for
+  comparing spectra of different targets.
+  <li>Added possibility to flatfield correct TIFF files directly with
+  the <a href="#testchart-ff">testchart-ff</a> command, useful for targets that aren't speckled
+  with white patches.
+  <li>Now read spectra isn't resampled when written to .ti3 unless
+  necessary.
+  <li>Added <code>-C</code> option to make-target, make-profile and
+  test-profile which causes the XYZ D50 reference values to be
+  calculated via CAT02 from calibration illuminant values, rather than
+  recalculated directly for D50 from spectra, useful if you want to
+  the profile to model color appearance differences between illuminants.
+  <li>Replaced CAT02 with Bradford in cases CAT is used for
+  "relighting" rather than "perceptual" results, as Bradford generally
+  has better performance for this particular task while CAT02 is
+  better at perceptual modeling.
+  <li>Added <code>nve-lutd.dat</code>, a higher density grid useful when
+  zooming in plots of the native LUT.
+</ul>
+
+<strong>2015-05-23</strong><br>
+Version 0.7.0. Changes:
+<ul>
+  <li>Added -b and -B flags for white balancing control in
+  make-profile and test-profile.
+  <li>New default: now make-profile will per default re-balance the
+  target reference values so that the whitest patch is considered 100%
+  neutral even if it isn't. This is because most users will expect
+  color-picking the white patch will make up the perfect white balance.
+  <li>Added -x parameter to make-profile so you can provide a list of
+  patches to exclude from the target, intended to be used when you're
+  doing several re-generates testing to remove problematic patches.
+  <li>Added a new section "<a href="#white_balance">white balance and
+  camera profiles</a>" which describes the relationship between your
+  raw converter's white balance and the camera profile, it's a good
+  read.
+  <li>Added new command "make-testchart" that generates an Argyll .ti1
+    used to make a real test target chart using Argyll's printtarg and
+    an inkjet printer.
+  <li>Added new command "testchart-ff" which is used for compensate
+    uneven light in a test chart photo.
+  <li>Patch labels are now kept when processing .ti3 files, is shown
+    in patch matching reports and can also be plotted, like this in
+    gnuplot-speak: <code>'target-xyz.dat' pt 7 lc rgb var,
+    'target-xyz.dat' using 1:2:3:5 with labels offset
+    2</code>
+  <li>For convenience make-target no longer requires assigning a
+  class name when reprocessing .ti3 files.
+</ul>
+
+<strong>2015-05-18</strong><br>
+Patch release 0.6.4. Fixed overall stats bug. Added possibility to
+show matrix result only on make-profile (-L), useful when doing
+repeated runs tuning weights for a matrix-only profile. Minor
+adjustment of matrix optimizer. Updated make-profile weighting
+documentation with some more tips.
+<p>
+<strong>2015-05-17</strong><br>
+Patch release 0.6.3. Fixed a plot bug introduced in 0.6.2. I also
+adjusted whitepoint preservation handling, now the LUT (per default)
+excludes patches close to the whitepoint, as the matrix is
+whitepoint-preserving (neutral patches already optimized for as good
+as possible) it doesn't make sense to stretch there. Added sign to
+error tables on lightness and chroma so one can see if the color is
+too light or dark or too saturated or desaturated. Added two more
+error vector plots.
+<p>
+<strong>2015-05-16</strong><br>
+Patch release 0.6.2. Added ICC support for test-profile, including
+transfer function reversal, and also some ICC plots. Now ICC support
+is as good as DCP support.
+<p>
+<strong>2015-05-13</strong><br>
+Patch release 0.6.1. Fixed various ICC bugs, added possibility to
+provide transfer functions which means Capture One ICCs can now be
+generated. It's now also possible to make LUT ICCs. Test-profile
+for ICC is still missing, but otherwise ICC support should be
+complete. To read transfer functions a new dependency was added,
+libtiff. The native LUT now applies whitepoint preservation.
+<p>
+<strong>2015-05-11</strong><br>
+Here's 0.6.0. It's now possible to make ICC profiles
+(<code>make-icc</code>), matrix-only for linear pipelines only to start
+with (<code>-L</code> flag must be enabled). Added possibility to add a
+tone curve when making a DCP. Extended profile format (can't use old
+profile.json files, sorry). Added <code>icc2json</code>
+and <code>json2icc</code> commands. Added -I parameter
+to <code>make-target</code> so you can separate RGB and XYZ illuminants
+also in that command. Increased parsing flexibility for Argyll-like
+files (various CGATS), should handle patchtool files better.
+<p>
+<strong>2015-05-05</strong><br>
+Patch release 0.5.4. Fixed bug in RGB/XYZ levels when merging several
+targets, fixed a few Windows compile bugs. Now DCamProf supports
+emissive spectra in the target files (added SAMPLE_TYPE column, "R" or
+"E"). When merging targets the special patch "illuminant" and "white"
+(new) is now always kept even if there are nearby patches.
+<p>
+<strong>2015-05-03</strong><br>
+Patch release 0.5.3. Added possibility to read Argyll SPECT files
+(produced by Argyll's <code>illumread</code>) as illuminants. Now it's
+possible to make dual-illuminant DCPs directly with
+the <code>make-dcp</code> command. When running the command without
+parameters there is now a full list of exif light sources and their
+temperatures, a useful list when choosing a suitable calibration
+illuminant. Added a new command <code>txt2ti3</code> to convert raw text
+files with spectral data to .ti3 that <code>make-target</code> can read,
+useful when getting spectral data from various third-party sources.
+<p>
+<strong>2015-05-02</strong><br>
+Patch release 0.5.2. A slight adjustment of observer remapping in
+make-dcp and some update of observer documentation.
+<p>
+<strong>2015-05-01</strong><br>
+New patch release 0.5.1. I hadn't tested on Lightroom properly. It was
+shown that Lightroom cannot handle too high precision on matrix
+rationals and it doesn't like if the standard observer WP is different
+from 1931_2. I have now changed default observer to 1931_2 as it's an
+easier to use default, and made an automatic remapping in the make-dcp
+tool to handle the case when a different observer was used during
+profile creation.
+<p>
+<strong>2015-04-30</strong><br>
+Here's the first release of DCamProf to the public (0.5.0). This is an
+early one, and while you can make camera profiles with it it's still in a
+"hackish" state, probably some bugs left and certainly slow. There's
+lots of silly loops over loops here and there. My excuse is that I've
+been focused to get things working first rather than get stuck
+optimizing for speed. As usual with these kind of projects it has
+taken far more time than I initially planned, but then it's far more
+feature-rich too!
+
+<br>
+<br>
+<hr>
+Copyright &copy; 2015 &ndash; 2016 &mdash; <a href="mailto:torger@ludd.ltu.se">Anders Torger</a>.
+
+</div>
+</body>
+</html>
+
+<!--  LocalWords:  DCamProf sp dcp json icc txt HSV dcamprof CIEDE kL
+ -->
+<!--  LocalWords:  Instagram dat srgb DefaultBlackRender nve xyz pre
+ -->
+<!--  LocalWords:  printtarg patchtool SPECT illumread Mingw cie tif
+ -->
+<!--  LocalWords:  dcraw scanin cht acr ssf defocus ForwardMatrix u'v
+ -->
+<!--  LocalWords:  ForwardMatrices contrasty caucasian Photoshop args
+ -->
+<!--  LocalWords:  Babelcolor's spotread dir kuopio munsell adobergb
+ -->
+<!--  LocalWords:  prophoto argyll dmk xy kC kH SSFs ps lt gmt lc lw
+ -->
+<!--  LocalWords:  EOS minimas lsOther hdiv sdiv vdiv HSM splot lut
+ -->
+<!--  LocalWords:  hsm ie WhiteFluorescent rtc GreenTRC TRC GrayTRC
+ -->
+<!--  LocalWords:  ProfileToneCurve JCh AddHue AddLightness AddChroma
+ -->
+<!--  LocalWords:  ScaleChroma ScaleLightness SetTemperature CMY CLUT
+ -->
+<!--  LocalWords:  CompressGamut BlendInvert RoundedStep GNUPlot DxO
+ -->
+<!--  LocalWords:  lablut xyzlut lutXX lutve vec targetd iccdump HDR
+ -->
+<!--  LocalWords:  TIFFTAG TRANSFERFUNCTION targen scannable fm LCh
+ -->
+<!--  LocalWords:  XYZref XYZcam Luv cmf classname th lutd lutv lkt
+ -->
+<!--  LocalWords:  lutvm csep refm lin gnuplot's replot greenyellow
+ -->
+<!--  LocalWords:  Dengyu Liu colorchecker FReD Hutt Nelder multi
+ -->
+<!--  LocalWords:  Jarno Elonen
+ -->

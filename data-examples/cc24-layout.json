@@ -1,0 +1,13 @@
+// Layout specification for X-Rite ColorChecker Classic
+// Can be used for flat-field correction and glare modeling
+{
+   "RowCount": 4,
+   "ColCount": 6,
+   "RelativeRowHeight": 1.0,
+   "RelativeColWidth": 1.0,
+   "HasColOffset": false,
+
+   "WhitePatches": [ "D01" ],
+   "BlackPatches": [ "D06" ],
+   "MiddleGrayPatches": [ "D04" ]
+}

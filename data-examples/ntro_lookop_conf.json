@@ -1,0 +1,404 @@
+// This example configuration file contains a custom subjective look, demonstrating the use of look operators.
+// Note that the look defined here may or may not suit your taste, and may or may not work well together with
+// your particular base profile, so only use it as an example not a final recipe.
+
+{
+    // Configuration parameters for the neutral tone reproduction operator, most left at defaults
+    "ChromaScaling": -1,
+    "Curve": {
+        "KeepFactor": 0.0,
+        "LowChroma": 25,
+        "HighChroma": 65
+    },
+    "Saturated": {
+        "AdjustFactor": 0.92,
+        "LowChroma": 35,
+        "HighChroma": 60
+    },
+    "Shadows": {
+        "AdjustFactor": 1.20,
+        "AdjustFactorHighChroma": 1.08,
+        "LowLightness": 0.15,
+        "HighLightness": 0.50,
+        "LowChroma": 25,
+        "HighChroma": 40
+    },
+    // Rolloff has been reconfigured from default. We whiten skintone highlight range further,
+    // and we make rolloff shorter for cyan-blue-magenta to keep color higher up in skies
+    // We also make sure to keep configuration the same in the whole red-yellow-orange range
+    // with some margin to avoid damaging gradients in sunsets. Sunsets are rendered a bit whiter
+    // as a side effect of the skintone brightening -- there's always a tradeoff.
+    "Rolloff": {
+        "KeepFactorHueCurve": {
+            "CurveType": "RoundedStep",
+            "CurveHandles": [ [0, 0.0], [60, 0.0], [90, 0.2], [150, 0.2], [180, 0.4], [270, 0.4], [300, 0.2], [330, 0.2], [345, 0.0], [360, 0.0] ]
+        },
+        "LowSatScaleHueCurve": {
+            "CurveType": "Linear",
+            "CurveHandles": [ [ 0,1.0 ], [ 360,1.0 ] ]
+        },
+        "HighSatScaleHueCurve": {
+            "CurveType": "RoundedStep",
+            "CurveHandles": [ [ 0,1.20 ], [ 360,1.20 ] ]
+        }
+    },
+
+    // Compress the gamut towards AdobeRGB
+    "GamutCompression": {
+        // Gamut compression is applied on the colorimetric data before the tone curve is applied as it works
+        // best on linear data. The curve and look operators (if any) may therefore push some colors out of
+        // gamut again. However, this function is not intended to have "mathematically exact" borders which
+        // is in any case not necessary as some clipping is generally desired for the best use of available
+        // gamut.
+
+        // Available gamuts:
+        //   "sRGB", "AdobeRGB", "ProPhotoRGB", custom matrix,
+        //   "Locus" (human observer locus), "ProPhotoRGB-Locus-Intersection"
+        //   (The D65 sRGB and AdobeRGB are remapped to D50 to match the ICC/DCP whitepoint)
+
+        // The whole "HSVPreprocessing" section is optional. It's applied before the normal gamut compression
+        // and is useful if you desire a stronger compression effect. It manipulates RGB HSV values and gives
+        // a more direct connection to clipping and gradients than a perceptual space like CIECAM02 does. The
+        // principle is that at the top end the max RGB value is reduced (keeping HSV hue), and at the bottom
+        // end the minimum RGB value is lifted, applied with ProPhotoRGB primaries, and then these compressed
+        // colors are softly blended in for high HSV saturation colors.
+
+        "HSVPreprocessing": {
+            // The color is converted to the inner gamut and we see how much the maximum value exceeds 1.0
+            // towards the Prophoto limit. This is then used as input to the HSV value darkening curve, the
+            // more the value exceeds 1.0, the more darkening effect. To limit the effect the "exceed value"
+            // can be limited and compressed. This is not necessary for AdobeRGB compression, so the values
+            // have been set to '1000', that is in practice unlimited. But for sRGB the values could be 1.2
+            // for LinearLimit, 2.0 for CutoffLimit and 1.4 for OutputLimit. This would mean that no
+            // compression is made for 1.0 - 1.2 range, then the 1.2 - 2.0 range is compressed to end at
+            // 1.4, and all values above CutoffLimit is limited to that.
+            "TopLinearLimit": 1000,
+            "TopCutoffLimit": 1000,
+            "TopOutputLimit": 1000,
+
+            // To reduce the darkening effect the RGB-minimum value of darkened colors can be lifted, which will
+            // lighten it and as a side effect will lower saturation. The value is a fraction of the max value
+            // reduction, that is 1.0 means that the minimum value is raised as much as the maximum value is
+            // reduced. HSV hue is as always kept constant. A reasonable range is 0.0 ... 1.0.
+            "TopRGBMinLift": 0.0,
+
+            // Same as the top limits but for the minimum values, that is the negative range below 0.0
+            "BottomLinearLimit": -0.05,
+            "BottomCutoffLimit": -0.2,
+            "BottomOutputLimit": -0.1,
+
+            // To reduce the desaturation effect the RGB-maximum value of desaturated colors can be lifted, which
+            // will saturate it and as a side effect lighten it. The value is a fraction of the minimum value
+            // lift. A reasonable range is 0.0 ... 1.0
+            "BottomRGBMaxLift": 0.3,
+
+            // The compressed colors are blended in for high HSV saturation colors. While the compression is
+            // applied in ProPhotoRGB, the evaluation to blend in is made on the inner gamut. That is everything
+            // outside the inner gamut will be blended in. However to avoid bad gradients and to have a good
+            // visible effect one should have a fairly wide blend range. The range below says that all colors
+            // with a HSV saturation below the low value on the inner gamut should be untouched, and then the
+            // compressed colors are blended in increasingly to reach full when the saturation reaches the high
+            // value. Note that this blend range is further softened to improve gradients so there will be some
+            // minor bleed into lower saturation colors.
+            "InnerGamutSatBlendRange": [ 0.6, 0.9 ]
+        },
+
+        // With the RGB Channel Limits we control how much overshoot we allow on RGB channels. To exactly fit
+        // within gamut there should be no overshoots, that is 0 on low limit and 1 on high limit. This is
+        // usually not a good idea though as good tonality is still had with one or two channels clipped and
+        // we can achieve higher saturation allowing that.
+        "RGBChannelHighLimit": 10000000, // very large number, that is in practice no limit
+        "RGBChannelLowLimit": -0.005,
+
+        // Everything inside the inner gamut will be unchanged, here set to 60% of the maximum chroma of AdobeRGB
+
+        // Just for demonstration of the custom matrix feature we specify AdobeRGB with its RGB to XYZ matrix
+        // instead of using the "AdobeRGB" shortcut. The matrix which will automatically be remapped to D50
+        // whitepoint (AdobeRGB is D65).
+        //"InnerGamut": "AdobeRGB",
+        "InnerGamut": [
+           [  2.04159, -0.56501, -0.34473 ],
+           [ -0.96924,  1.87597,  0.04156 ],
+           [  0.01344, -0.11836,  1.01517 ]
+        ],
+        "InnerGamutChromaScale": 0.6, // 0.6 = the border is set at 60% of the inner gamut chroma range
+
+        // Everything outside the clip gamut will be hard-clipped (no compression)
+        "ClipGamut": "ProPhotoRGB-Locus-Intersection",
+        "ClipGamutChromaScale": 1.0,
+
+        // The range between inner gamut and clip gamut is compressed so the new clip edge
+        // becomes the edge of the destination gamut.
+        "DestinationGamut": "AdobeRGB",
+        "DestinationGamutChromaScale": 1.0
+    },
+
+    // Here follows a list of look operators that design a subjective look
+    "LookOperators": [
+        /*
+         Available operators:
+
+           AddHue
+           AddLightness
+           AddChroma
+           ScaleChroma
+           ScaleLightness
+           SetTemperature (WB temperature change with 5000K as reference)
+           Curves (RGB curves)
+           Stretch (expand/compress areas in the gamut)
+           CompressGamut (compress the gamut to make saturated colors fit in sRGB for example)
+
+         Available X axes:
+           CIECAM02:
+             Lightness: 0 - 100 range lightness (J)
+             Chroma: 0 - open-ended chroma (C)
+             Hue: 0 - 360 hue (h)
+           Linear ProPhoto RGB-HSL, RGB-HSV:
+             HSL-Lightness: 0 - 100
+             HSL-Saturation: 0 - 100
+             HSL-Hue: 0 - 360
+             HSV-Value: 0 - 100
+             HSV-Saturation: 0 - 100
+             HSV-Hue: 0 - 360
+
+         Available interpolating curves:
+           Spline
+           Linear
+           RoundedStep
+
+        */
+
+        { // Stretch to even out skin tones, that is we compress towards a center tone
+
+           // We don't have a blend section in this stretch operator (we could have) as it will only have effect in the specified range anyway
+           "Operator": "Stretch",
+           "Stretch": [
+              // Here we only work along the Hue axis, but we can add elements in the stretch array for Chroma and Lightness too
+              {
+                 "X": "Hue",
+                 // XRange defines the range the curve will work in.
+                 "XRange": [ 10, 60 ],
+                 // The curve should be a diagonal (start at 0,0 and end at 1,1) and for smooth transition the slope should be 1.0 in
+                 // the start and end.
+                 "Curve": {
+                    "CurveType": "Spline",
+                    "CurveHandles": [ [ 0,0 ], [ 0.09, 0.11 ], [ 0.20, 0.27 ], [ 0.80, 0.73 ], [ 0.91, 0.89 ], [ 1,1 ] ] // compress to center
+                 }
+              }
+           ]
+        }
+        ,
+        { // RGB curves to slightly alter the hue of skin. We only make it affect the skin tone range, and only lighter skin.
+           "Operator": "Curves",
+           "CurvesGamma": "sRGB", // specify gamma of the curves either as "sRGB" or a number (typically 1.8 - 2.2, and 1.0 for linear)
+           "Curves": [
+              { "CurveType": "Spline", "CurveHandles": [[0, 0],[0.20, 0.20],[0.40, 0.40],[0.80, 0.793],[1, 1]] },
+              { "CurveType": "Spline", "CurveHandles": [[0, 0],[0.50, 0.496],[1, 1]] },
+              { "CurveType": "Spline", "CurveHandles": [[0, 0],[0.50, 0.508],[1, 1]] }
+           ],
+           // Blend works in 0.0 - 1.0 range (values outside that range will be clipped), 0 - 100% is blended in. We start with 1.0 and
+           // then the value is multiplied by each blend element. The input value is the output from the last operator.
+           "Blend": [
+               {
+                   "X": "Hue",
+                   "XRange": [ 0, 100 ],
+                   "YScale": 1, // YScale is optional (default value 1.0) and specifies how the Y values in the curve should be scaled
+                   "Curve": {
+                      "CurveType": "RoundedStep",
+                      "CurveHandles": [ [ 0, 0 ], [ 0.1, 1 ], [ 0.6, 1 ], [ 0.7, 0 ], [ 1, 0 ] ]
+                   }
+               },
+               {
+                   "X": "Chroma",
+                   "XRange": [ 0, 100 ],
+                   "Curve": {
+                      "CurveType": "RoundedStep",
+                      "CurveHandles": [ [ 0, 1 ], [ 0.55, 1 ], [ 0.65, 0 ], [ 1, 0 ] ]
+                   }
+               },
+               {
+                   "X": "Lightness",
+                   "XRange": [ 0, 100 ],
+                   "Curve": {
+                      "CurveType": "RoundedStep",
+                      "CurveHandles": [ [ 0, 0 ], [ 0.45, 0 ], [ 0.6, 1 ], [ 1, 1 ] ]
+                   }
+               },
+               { // limiter to avoid DCP LUT hue discontinuity issues
+                   "X": "HSV-Saturation",
+                   "XRange": [ 5, 10 ],
+                   "Curve": {
+                      "CurveType": "RoundedStep",
+                      "CurveHandles": [ [0,0], [1,1] ]
+                   }
+               }
+            ]
+            // "BlendInvert": true -- set this if you want the Blend to be inverted
+        }
+        ,
+        { // Slightly brighten highlights of skin
+            "Operator": "ScaleLightness",
+            "Value": 1.02,
+            "Blend": [
+                {
+                    "X": "Hue",
+                    "XRange": [ -40, 41 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 0 ], [ 0.50, 1 ], [0.65, 1], [ 1, 0 ] ]
+                    }
+                },
+                { // limiter to avoid DCP LUT hue discontinuity issues
+                    "X": "HSV-Saturation",
+                    "XRange": [ 5, 10 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,0], [1,1] ]
+                    }
+                }
+            ]
+        }
+        ,
+        { // Slightly increase chroma of low saturation skin
+            "Operator": "ScaleChroma",
+            "Value": 1.05,
+            "Blend": [
+                {
+                    "X": "Chroma",
+                    "Y": "Scale",
+                    "XRange": [ 0, 100 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 1 ], [ 0.09, 1 ], [ 0.28, 0 ], [ 1, 0 ] ]
+                    }
+                },
+                {
+                    "X": "Hue",
+                    "Y": "Scale",
+                    "XRange": [ 0, 100 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 0 ], [ 0.1, 1 ], [ 0.6, 1 ], [ 0.7, 0 ], [ 1, 0 ] ]
+                    }
+                },
+                {
+                    "X": "Lightness",
+                    "Y": "Scale",
+                    "XRange": [ 0, 100 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 0 ], [ 0.1, 0 ], [ 0.2, 1 ], [ 1, 1 ] ]
+                    }
+                },
+                { // limiter to avoid DCP LUT hue discontinuity issues, and make a smoother rolloff to white
+                    "X": "HSV-Saturation",
+                    "XRange": [ 50, 55 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,0], [1,1] ]
+                    }
+                }
+            ]
+        }
+        ,
+        { // Warmup midtones and highlights in yellows and greens for more punch in landscape scenes with golden light
+            // Reference temperature (no change temperature) is always 5000K 0 tint.
+            "Operator": "SetTemperature", "TempTint": [ 5400, 5 ],
+            "BlendRGB": true, // RGB blending (instead of default JCh) used here as it gives better result for this operator (tested by eye by looking at gradient render)
+            "Blend": [
+                {
+                    "X": "Hue",
+                    "XRange": [ 70, 200 ],
+                    "YScale": 1,
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 0 ], [ 0.3, 1 ], [ 0.7, 1 ], [ 1, 0 ] ]
+                    }
+                }
+                ,
+                {
+                    "X": "Lightness",
+                    "Y": "Scale",
+                    "XRange": [ 0, 100 ],
+                    "Curve": {
+                       "CurveType": "Spline",
+                       "CurveHandles": [ [0,0], [0.154034,0.0342298], [0.278729,0.232274], [0.413203,0.770171], [0.581907,0.973105], [1,1] ]
+                    }
+                }
+                ,
+                { // limiter to avoid DCP LUT hue discontinuity issues, and make a smoother rolloff to white
+                    "X": "HSV-Saturation",
+                    "XRange": [ 0, 15 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,0], [1,1] ]
+                    }
+                }
+            ]
+        }
+        ,
+        { // Overall saturation increase, but excluding red/hue range to not hurt skintones, and also excluding already highly saturated colors
+            "Operator": "ScaleChroma",
+            "Value": 1.05,
+            "Blend": [
+                {
+                    "X": "Hue",
+                    "XRange": [ 70, 300 ],
+                    "YScale": 1,
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 0 ], [ 0.1, 1 ], [ 0.9, 1 ], [ 1, 0 ] ]
+                    }
+                },
+                {
+                    "X": "Chroma",
+                    "XRange": [ 40, 70 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 1 ], [ 1, 0 ] ]
+                    }
+                }
+            ]
+        }
+        ,
+        { // Increase magenta slightly (=reduce green) in orange to get more separation between low saturation greens and reds
+           "Operator": "Curves",
+           "CurvesGamma": "sRGB",
+           // Keep lightness causes the lightness dimension to be kept as original
+           "KeepLightness": true,
+           "Curves": [
+              { "CurveType": "Linear", "CurveHandles": [[0, 0],[1, 1]] },
+              { "CurveType": "Spline", "CurveHandles": [[0, 0],[0.50, 0.49],[1, 1]] },
+              { "CurveType": "Linear", "CurveHandles": [[0, 0],[1, 1]] }
+           ],
+            "Blend": [
+                {
+                    "X": "Hue",
+                    "XRange": [ 40, 80 ],
+                    "YScale": 1,
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [ 0, 0 ], [ 0.35, 1 ], [ 0.65, 1 ], [ 1, 0 ] ]
+                    }
+                },
+                { // avoid disturbing neutrals
+                    "X": "HSV-Saturation",
+                    "XRange": [ 5, 15 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,0], [1,1] ]
+                    }
+                }
+                ,
+                { // fade out for high saturation
+                    "X": "Chroma",
+                    "XRange": [ 10, 50 ],
+                    "Curve": {
+                       "CurveType": "RoundedStep",
+                       "CurveHandles": [ [0,1], [1,0] ]
+                    }
+                }
+            ]
+        }
+    ]
+}

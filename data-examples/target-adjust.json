@@ -1,0 +1,45 @@
+// Target adjustment example, provided to make-profile command. This is used
+// to adjust the patches of the input target, and as a side effect change
+// the result of the base colorimetric profile.
+{
+    // Global adjustments, applied to all patches that match the adjustments. Note that if
+    // you make a change to some narrow band green and the test target does not contain a
+    // patch matching that it will have no effect. To fine-tune "look" you should use the
+    // look operators in the tone reproduction configuration instead.
+
+    "GlobalAdjustments": {
+        // CIECAM02 JCh
+        "ScaleChroma": 1.0, // applied to all patches regardless hue
+        "ScaleLightness": 1.0, // applied to all patches regardless hue
+        // Scaling per hue
+        "ScaleChromaPerHue": {
+            "CurveType": "Linear",
+            "CurveHandles": [ [0, 1.0], [360, 1.0] ]
+        },
+        "ScaleLightnessPerHue": {
+            "CurveType": "Linear",
+            "CurveHandles": [ [0, 1.0], [360, 1.0] ]
+        },
+        "AddHuePerHue": {
+            "CurveType": "RoundedStep",
+            "CurveHandles": [ [  0,  0.0], [ 30,  0.0], [ 60, 0.0], [ 90, 0.0],
+                              [120,  0.0], [150,  0.0], [180, 0.0], [210, 0.0],
+                              [240,  0.0], [270,  0.0], [300, 0.0], [330, 0.0],
+                              [360,  0.0] ]
+        }
+    },
+
+    // Targeted patch adjustments, will adjust the named patch if there's a match
+    "PatchAdjustments": [
+        {
+            "Name": "C01",
+            "Class": "", // class name, if available
+            // scale RGB channels, lightness will be kept same as original. This control is generally
+            // the most user-friendly when it comes to adjusting hue. Using the multipliers you
+            // adjust the relationship between red-cyan, green-magenta, blue-yellow.
+            "ScaleRGB": [ 1.0, 1.0, 1.0 ],
+            // scale J (lightness) and C (chroma), add h (hue)
+            "AdjustJCh": [ 1.0, 1.0, 0 ]
+        }
+    ]
+}

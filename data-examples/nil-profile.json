@@ -1,0 +1,20 @@
+// This is a dummy profile which assumes the "camera" raw is ProPhoto RGB primaries
+{
+  "CalibrationIlluminant1": "D50",
+  "ColorMatrix1": [
+    [  1.3457530096, -0.2556031200, -0.0510246682 ],
+    [ -0.5444259963,  1.5080962194,  0.0204718467 ],
+    [  0.0000000000,  0.0000000000,  1.2119675456 ]
+  ],
+  "ForwardMatrix1": [
+    [ 0.7976749,  0.1351917,  0.0313534 ],
+    [ 0.2880402,  0.7118741,  0.0000857 ],
+    [ 0.0000000,  0.0000000,  0.8252100 ]
+  ],
+  "ChromaLUT1": {
+    "regularization": [ -1, -1, -1 ],
+    "uvL": [  ],
+    "uvU": [  ],
+    "uvV": [  ]
+  }
+}

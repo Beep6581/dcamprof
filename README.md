@@ -12,6 +12,10 @@ http://rawpedia.rawtherapee.com/How_to_create_DCP_color_profiles
 
 ## Compilation
 
+Install the dependencies:
+* [LCMS2](http://www.littlecms.com/)
+* [libtiff](http://simplesystems.org/libtiff/)
+
 Enter the source code folder and run `make`:
 ```bash
 cd src

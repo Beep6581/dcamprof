@@ -4,8 +4,11 @@ DCamProf is a free and open-source command line tool for making camera profiles,
 
 ## Documentation
 
-Read the documentation here:
+Read the documentation here:  
 http://rawtherapee.com/mirror/dcamprof/dcamprof.html
+
+A tutorial on creating DCP profiles using DCamProf and RawTherapee can be found in RawPedia:  
+http://rawpedia.rawtherapee.com/How_to_create_DCP_color_profiles
 
 ## Compilation
 
@@ -19,14 +22,14 @@ The compiled executable `dcamprof` will be created in the source code folder, an
 
 ## Source Code and Bugs
 
-Report bugs and get the source code from here:
+Report bugs and get the source code from here:  
 https://github.com/Beep6581/dcamprof
 
 Please do not use GitHub for user support.
 
 ## Forum
 
-For user support and to chat with other users, use the forum. DCamProf shares a forum with users and developers of other Free/Libre/Open Source Software:
+For user support and to chat with other users, use the forum. DCamProf shares a forum with users and developers of other Free/Libre/Open Source Software:  
 https://discuss.pixls.us/
 
 ## Authors

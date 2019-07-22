@@ -1763,7 +1763,11 @@ profio_icc_toraw(const struct profio_icc *icc,
     hdr.pcs = icc->pcs_is_lab ? htonl(0x4C616220) : htonl(0x58595A20); // Lab or XYZ
     time_t tt = time(NULL);
     struct tm tm;
+#ifdef __MINGW32__
+    localtime_s(&tm, &tt);
+#else
     localtime_r(&tt, &tm);
+#endif
     hdr.create_date[0] = htons(tm.tm_year + 1900);
     hdr.create_date[1] = htons(tm.tm_mon+1);
     hdr.create_date[2] = htons(tm.tm_mday);

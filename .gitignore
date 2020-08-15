@@ -1,3 +1,4 @@
+.gitignore
 *~
 *.orig
 
@@ -26,3 +27,6 @@ Release
 *.xz
 *.zip
 
+*.o
+src/dcamprof
+src/dcamprof.exe

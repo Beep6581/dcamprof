@@ -164,8 +164,8 @@ profio_dcp_copy(const struct profio_dcp *dcp)
     if (dcp->copyright != NULL) dcp1->copyright = strdup(dcp->copyright);
     if (dcp->calibration_signature != NULL) dcp1->calibration_signature = strdup(dcp->calibration_signature);
     if (dcp->tonecurve != NULL) {
-        dcp1->tonecurve = malloc(dcp->tonecurve_len * sizeof(dcp1->tonecurve[0]));
-        memcpy(dcp1->tonecurve, dcp->tonecurve, dcp->tonecurve_len * sizeof(dcp1->tonecurve[0]));
+        dcp1->tonecurve = malloc(2 * dcp->tonecurve_len * sizeof(dcp1->tonecurve[0]));
+        memcpy(dcp1->tonecurve, dcp->tonecurve, 2 * dcp->tonecurve_len * sizeof(dcp1->tonecurve[0]));
     }
     if (dcp->looktable != NULL) {
         size_t table_size =  dcp->lookdims[0]*dcp->lookdims[1]*dcp->lookdims[2] * sizeof(dcp->looktable[0]);

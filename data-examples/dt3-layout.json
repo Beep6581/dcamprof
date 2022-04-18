@@ -1,0 +1,13 @@
+// Layout specification for CMP Color Digital Target 3
+// Can be used for flat-field correction and glare modeling
+{
+   "RowCount": 19,
+   "ColCount": 30,
+   "RelativeRowHeight": 1.0,
+   "RelativeColWidth": 1.0,
+   "HasColOffset": false,
+
+   "WhitePatches": [ "R13" ],
+   "BlackPatches": [ "M08" ],
+   "MiddleGrayPatches": [ "O12" ]
+}

@@ -4675,7 +4675,7 @@ main(int argc,
             } else {
                 for (int i = 0; i < w_class_count; i++) {
                     bool is_class;
-                    int j = target_class_or_patch_to_idx(ps, l_class_name[i], &is_class);
+                    int j = target_class_or_patch_to_idx(ps, w_class_name[i], &is_class);
                     if (j == -1) {
                         elog("Error: target \"%s\" doesn't contain class or patch \"%s\", cannot assign weight.\n", argv[ai], w_class_name[i]);
                         exit(EXIT_FAILURE);

@@ -29,6 +29,7 @@ struct look_tone_rep_op_t_ {
     m3x3 rgb2xyz;
     m3x3 xyz2rgb;
     struct tone_rep_op_config conf;
+    enum tc_type tc_type;
 };
 
 struct find_tc_slope_fun_arg {
@@ -158,6 +159,7 @@ look_tone_rep_op_t *
 look_tone_rep_op_new(const m3x3 rgb2xyz,
                      const double tc[],
                      int tc_len,
+                     enum tc_type tc_type,
                      enum gc_type gc_type,
                      const struct tone_rep_op_config *conf)
 {
@@ -321,6 +323,7 @@ look_tone_rep_op_new(const m3x3 rgb2xyz,
 
     state->tc = tc;
     state->tc_len = tc_len;
+    state->tc_type = tc_type;
     state->rgb2xyz = rgb2xyz;
     state->xyz2rgb = m3x3_invert(rgb2xyz);
 
@@ -699,7 +702,190 @@ look_tone_rep_op(v3 *out,
     const v3 prgb = {{ curve_y(orig_rgb.v[0], state->tc, state->tc_len),
                        curve_y(orig_rgb.v[1], state->tc, state->tc_len),
                        curve_y(orig_rgb.v[2], state->tc, state->tc_len) }};
+    const v3 pxyz = m3x3_mul_v3(state->rgb2xyz, prgb);
+
     const v3 argb = dcp_apply_tonecurve(orig_rgb, state->tc, state->tc_len);
+    const v3 axyz = m3x3_mul_v3(state->rgb2xyz, argb);
+
+    if (state->tc_type == TC_RGB
+        || state->tc_type == TC_SIMPLE
+        || state->tc_type == TC_SIMPLE_ACR_HUE
+        || state->tc_type == TC_SIMPLE_RGB_HUE) {
+
+        const v3 hsv = dcp_rgb2hsv(orig_rgb);
+        const v3 prgb_hsv = dcp_rgb2hsv(prgb);
+        const v3 argb_hsv = dcp_rgb2hsv(argb);
+        // orig H == argb H
+        assert(fabs(hsv.v[0] - argb_hsv.v[0]) < 1e-5 || fabs(hsv.v[0] - argb_hsv.v[0] - 6) < 1e-5);
+        // prgb V == argb V (max channel)
+        assert(fabs(argb_hsv.v[2] / prgb_hsv.v[2] - 1) < 1e-5);
+        // prgb S == argb S (max - min)
+        assert(fabs(prgb_hsv.v[1] / argb_hsv.v[1] - 1) < 1e-5);
+
+        v3 ref_rgb;
+
+        if (state->tc_type == TC_RGB) {
+
+            ref_rgb = prgb;
+
+        } else if (state->tc_type == TC_SIMPLE
+                || state->tc_type == TC_SIMPLE_ACR_HUE
+                || state->tc_type == TC_SIMPLE_RGB_HUE) {
+
+            // pure rgb by default
+            v3 rgb1 = prgb;
+
+            if (state->tc_type == TC_SIMPLE) {
+
+                if (hsv.v[0] > 0 && hsv.v[0] < 6 * 60 / 360) {
+                    // hue 0...60 - red-yellow
+
+                    // skintone CCSG data (-1EV, ProPhoto linear):
+                    // H 21...37 deg
+                    // S 0.42...0.84 (0.42...0.72 excluding dark skintone < -3EV)
+                    // V -4.1...-1.7EV
+                    // This is reference data, keep in mind highlights and shadows.
+
+                    // keep argb hue for value from 0 to -2EV with roll-off to 0EV
+                    // (for reference: dng curve max correction at x = 0.178 (-2.5EV)
+                    //  by 1.1EV, from 50L to 68L)
+                    const double v_low = pow(2.0, -2.0);  // dng_curve(2**-2) == 0.52 (77L)
+                    const double v_high = pow(2.0, 0); // dng_curve(2**-0.5) == 0.92 (97L)
+                    // weight of pure rgb
+                    double wv = (hsv.v[2] - v_low) / (v_high - v_low);
+                    wv = (wv < 0) ? 0 : wv;
+                    wv = (wv > 1) ? 1 : wv;
+
+                    // pure rgb for high saturated AND bright colors
+                    // tested on sunny images with hair highlights
+                    const double sun_s_low = 0.65;
+                    const double sun_s_high = 0.80;
+                    // weight of pure rgb
+                    double w_sun_s = (hsv.v[1] - sun_s_low) / (sun_s_high - sun_s_low);
+                    w_sun_s = (w_sun_s < 0) ? 0 : w_sun_s;
+                    w_sun_s = (w_sun_s > 1) ? 1 : w_sun_s;
+
+                    const double sun_v_low = pow(2.0, -3);
+                    const double sun_v_high = pow(2.0, -1);
+                    double w_sun_v = (hsv.v[2] - sun_v_low) / (sun_v_high - sun_v_low);
+                    w_sun_v = (w_sun_v < 0) ? 0 : w_sun_v;
+                    w_sun_v = (w_sun_v > 1) ? 1 : w_sun_v;
+
+                    // sun is high sat AND high value
+                    const double w_sun = w_sun_s * w_sun_v;
+
+                    // weight for pure RGB
+                    // double w = wv;
+                    // pure rgb for high value OR sun
+                    double w = 1 - (1 - wv) * (1 - w_sun);
+
+                    rgb1.v[0] = (1 - w) * argb.v[0] + w * prgb.v[0];
+                    rgb1.v[1] = (1 - w) * argb.v[1] + w * prgb.v[1];
+                    rgb1.v[2] = (1 - w) * argb.v[2] + w * prgb.v[2];
+                }
+                else if (hsv.v[0] > 6 * 240 / 360 && hsv.v[0] < 6 * 300 / 360) {
+                    // prevent blue shift to purple
+                    rgb1 = argb;
+                } else {
+                    // // acr rgb hue to pure rgb hue roll-off from 0 to -3ev, above -3ev pure rgb hue
+                    // const double v_low = 0;
+                    // const double v_high = pow(2.0, -3.0);
+
+                    // acr rgb hue to pure rgb hue roll-off from -2ev to 0ev
+                    // tested on bright green leafs, that must not become yellow
+                    const double v_low = pow(2.0, -2.0);
+                    const double v_high = pow(2.0, 0.0);
+                    double w = (hsv.v[2] - v_low) / (v_high - v_low);
+                    w = (w < 0) ? 0 : w;
+                    w = (w > 1) ? 1 : w;
+                    rgb1.v[0] = (1 - w) * argb.v[0] + w * prgb.v[0];
+                    rgb1.v[1] = (1 - w) * argb.v[1] + w * prgb.v[1];
+                    rgb1.v[2] = (1 - w) * argb.v[2] + w * prgb.v[2];
+                }
+            }
+            else if (state->tc_type == TC_SIMPLE_ACR_HUE) {
+
+                rgb1 = argb;
+
+            } else if (state->tc_type == TC_SIMPLE_RGB_HUE) {
+
+                rgb1 = prgb;
+                if (hsv.v[0] > 6 * 240 / 360 && hsv.v[0] < 6 * 300 / 360) {
+                    // prevent blue shift to purple
+                    rgb1 = argb;
+                }
+            }
+            else
+                assert(false);
+
+            const v3 hsv1 = dcp_rgb2hsv(rgb1);
+            const v3 xyz1 = m3x3_mul_v3(state->rgb2xyz, rgb1);
+
+            // limit saturation
+
+            // desaturate, keep hue & Y
+            // bisection between rgb1 and gray of rgb1
+            v3 rgb2 = rgb1;
+            v3 hsv2 = hsv1;
+            v3 xyz2 = xyz1;
+            if ((    state->tc_type == TC_SIMPLE
+                  || state->tc_type == TC_SIMPLE_ACR_HUE
+                  || state->tc_type == TC_SIMPLE_RGB_HUE)
+                && hsv2.v[1] > hsv.v[1]) {
+                // bisection
+                double y1 = xyz1.v[1];
+                double k1 = 0, k2 = 1;
+                while (k2 - k1 > 1e-9) {
+                    double k = 0.5 * (k1 + k2);                    
+                    rgb2.v[0] = k * rgb1.v[0] + (1 - k) * y1;
+                    rgb2.v[1] = k * rgb1.v[1] + (1 - k) * y1;
+                    rgb2.v[2] = k * rgb1.v[2] + (1 - k) * y1;
+                    hsv2 = dcp_rgb2hsv(rgb2);
+                    if (hsv2.v[1] > hsv.v[1])
+                        k2 = k;
+                    else
+                        k1 = k;
+                }
+                xyz2 = m3x3_mul_v3(state->rgb2xyz, rgb2);
+            }
+            assert(fabs(xyz1.v[1] / xyz2.v[1] - 1) < 1e-8);
+
+            v3 ref_xyz = xyz2;
+            ref_rgb = m3x3_mul_v3(state->xyz2rgb, ref_xyz);
+
+            // limit result luminance Y
+            // darken red-yellow range
+            if (state->tc_type == TC_SIMPLE
+                || state->tc_type == TC_SIMPLE_ACR_HUE
+                || state->tc_type == TC_SIMPLE_RGB_HUE) {
+                double y2 = xyz2.v[1];
+                double y_tc = curve_y(xyz.v[1], state->tc, state->tc_len);
+                // double y_tc = axyz.v[1];
+                // variants: to acr or pure rgb lum
+                double ky = y_tc / y2;
+                if ((y2 > 1e-8) && (ky  < (1 - 1e-6))) {
+                    ref_xyz = k_mul_v3(ky, xyz2);
+                    ref_rgb = m3x3_mul_v3(state->xyz2rgb, ref_xyz);
+                }
+            }
+            if (v3_isclip01(ref_rgb))
+                exit(1);
+            v3 ref_hsv = dcp_rgb2hsv(ref_rgb);
+            assert(!v3_isclip01(ref_rgb));
+            ref_rgb = v3_clip01(ref_rgb);
+
+        } else {
+            assert(false);
+        }
+
+        if (!v3_isfinite(ref_rgb)) {
+            elog("Bug: non-finite RGB value in tone reproduction.\n");
+            abort();
+        }
+
+        *out = m3x3_mul_v3(state->rgb2xyz, ref_rgb);
+        return;
+    }
 
     double Yr = state->rgb2xyz.v[1][0];
     double Yg = state->rgb2xyz.v[1][1];

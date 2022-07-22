@@ -26,6 +26,7 @@ look_tone_rep_op_t *
 look_tone_rep_op_new(const m3x3 rgb2xyz,
                      const double tc[],
                      int tc_len,
+                     enum tc_type tc_type,
                      enum gc_type gc_type,
                      const struct tone_rep_op_config *conf);
 

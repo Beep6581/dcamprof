@@ -2357,6 +2357,10 @@ make_dcp(struct dcam_profile *prof,
     if (tc != NULL) {
         switch (tc_type) {
         case TC_NEUTRAL:
+        case TC_RGB:
+        case TC_SIMPLE:
+        case TC_SIMPLE_ACR_HUE:
+        case TC_SIMPLE_RGB_HUE:
             if ((tc_len > 2 || gc_type != GC_NONE) && make_lut) {
                 if (!skip_lut_gamma) {
                     dcp->looktable_srgb_gamma = true;
@@ -2365,7 +2369,7 @@ make_dcp(struct dcam_profile *prof,
                 double cv, cs;
                 look_neutral_tone_rep_op_tc_analysis(tc, tc_len, &cv, &cs);
                 elog("The tone curve's contrast value is %.2f (=> auto chroma scaling value %.3f)\n", cv, cs);
-                dcp->looktable = dnglut_looktable_new(dcp->lookdims, hcount, scount, vcount, tc, tc_len, true, dcp->looktable_srgb_gamma, gc_type, ntro_conf);
+                dcp->looktable = dnglut_looktable_new(dcp->lookdims, hcount, scount, vcount, tc, tc_len, tc_type, true, dcp->looktable_srgb_gamma, gc_type, ntro_conf);
                 dnglut_test_discontinuity(dcp->looktable, hcount, scount, vcount, "LookTable", allow_discontinuity_hue_shifts);
                 print_hsm(report_dir, "lkt", dcp->looktable, dcp->lookdims[0], dcp->lookdims[1], dcp->lookdims[2], dcp->looktable_srgb_gamma);
             }
@@ -5100,6 +5104,14 @@ main(int argc,
                     tc_type = TC_NEUTRAL;
                 } else if (strcasecmp(argv[ai], "standard") == 0) {
                     tc_type = TC_STANDARD;
+                } else if (strcasecmp(argv[ai], "rgb") == 0) {
+                    tc_type = TC_RGB;
+                } else if (strcasecmp(argv[ai], "simple") == 0) {
+                    tc_type = TC_SIMPLE;
+                } else if (strcasecmp(argv[ai], "simple-acr-hue") == 0) {
+                    tc_type = TC_SIMPLE_ACR_HUE;
+                } else if (strcasecmp(argv[ai], "simple-rgb-hue") == 0) {
+                    tc_type = TC_SIMPLE_RGB_HUE;
                 } else {
                     tc_type = TC_NEUTRAL;
                     ntro_conf = jsonio_ntro_conf_parse(argv[ai], true);

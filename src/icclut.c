@@ -253,8 +253,12 @@ icclut_new(const m3x3 cam2xyz,
     const int itc_len = 65535;
     double *itc = NULL;
     if (tc != NULL) {
-        if (tc_type == TC_NEUTRAL) {
-            ntro = look_tone_rep_op_new(rgb2xyz, tc, tc_len, gc_type, ntro_conf);
+        if (tc_type == TC_NEUTRAL
+            || tc_type == TC_RGB
+            || tc_type == TC_SIMPLE
+            || tc_type == TC_SIMPLE_ACR_HUE
+            || tc_type == TC_SIMPLE_RGB_HUE) {
+            ntro = look_tone_rep_op_new(rgb2xyz, tc, tc_len, tc_type, gc_type, ntro_conf);
             itc = malloc(itc_len * sizeof(itc[0]));
             for (int i = 0; i < itc_len; i++) {
                 double x = (double)i / (itc_len - 1);

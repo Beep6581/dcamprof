@@ -72,7 +72,11 @@ struct patch_error_report {
 
 enum tc_type {
     TC_NEUTRAL,
-    TC_STANDARD
+    TC_STANDARD,
+    TC_RGB,
+    TC_SIMPLE,
+    TC_SIMPLE_ACR_HUE,
+    TC_SIMPLE_RGB_HUE
 };
 
 enum gc_type {

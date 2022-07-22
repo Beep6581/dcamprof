@@ -184,6 +184,7 @@ dnglut_looktable_new(uint32_t hsmdims[3],
                      int vcount,
                      const double tc[],
                      int tc_len,
+                     enum tc_type tc_type,
                      bool skip_tc_apply,
                      bool srgb_gamma,
                      enum gc_type gc_type,
@@ -193,7 +194,7 @@ dnglut_looktable_new(uint32_t hsmdims[3],
     const m3x3 xyz2rgb = dcp_xyz_D50_to_prophoto_rgb;
     const m3x3 rgb2xyz = m3x3_invert(xyz2rgb);
     v3 *hsm = malloc(hcount * scount * vcount * sizeof(*hsm));
-    look_tone_rep_op_t *ntro = look_tone_rep_op_new(rgb2xyz, tc, tc_len, gc_type, ntro_conf);
+    look_tone_rep_op_t *ntro = look_tone_rep_op_new(rgb2xyz, tc, tc_len, tc_type, gc_type, ntro_conf);
 
     const int itc_len = 65535;
     double *itc = malloc(itc_len * sizeof(itc[0]));

@@ -717,7 +717,7 @@ jsonio_tonecurve_parse(const char filename[],
             inx[i] = lc->handles[2*i+0];
             iny[i] = lc->handles[2*i+1];
         }
-        const int tc_len = 65536;
+        const int tc_len = 1024;
         double *outx = malloc(sizeof(outx[0]) * tc_len);
         *trc = malloc(sizeof((*trc)[0]) * tc_len);
         for (int i = 0; i < tc_len; i++) {

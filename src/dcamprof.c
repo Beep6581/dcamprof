@@ -5146,6 +5146,17 @@ main(int argc,
         if (description != NULL) {
             free(dcp->profile_name);
             dcp->profile_name = strdup(description);
+        } else {
+            if (tc_type == TC_STANDARD) {
+                dcp->profile_name = strdup("Standard");
+            }
+            if (tc_type == TC_STANDARD) {
+               if (ntro_conf == NULL) {
+                   dcp->profile_name = strdup("Neutral");
+               } else {
+                   dcp->profile_name = strdup("Custom");
+               }
+            }
         }
         if (copyright != NULL) {
             free(dcp->copyright);

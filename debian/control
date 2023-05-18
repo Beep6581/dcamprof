@@ -1,0 +1,11 @@
+Source: dcamprof
+Priority: optional
+Section: graphics
+Maintainer: John Doe <johndoe@example.net>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+
+Package: dcamprof
+Section: graphics
+Architecture: any
+Description: Digital Camera Profiler

@@ -1,0 +1,13 @@
+// Layout specification for LaserSoft DC Pro layout
+// Can be used for flat-field correction and glare modeling
+{
+   "RowCount": 10,
+   "ColCount": 14,
+   "RelativeRowHeight": 1.0,
+   "RelativeColWidth": 1.0,
+   "HasColOffset": false,
+
+   "WhitePatches": [ "A08", "B01", "B14", "E08", "I01", "I14", "J03" ],
+   "BlackPatches": [ "A02", "A07", "A13", "C01", "C14", "E07", "F08", "H01", "H14", "J02", "J13" ],
+   "MiddleGrayPatches": [ "A04", "A11", "E01", "E14", "J09" ]
+}

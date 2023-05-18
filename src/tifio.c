@@ -326,7 +326,7 @@ tifio_rgbimg_save(const char filename[],
     TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, 3);
     TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT);
     if (colorspace == COLORSPACE_PROPHOTO) {
-        static const uint8 prophoto_icc[] =
+        static const uint8_t prophoto_icc[] =
             {
                 0x00, 0x00, 0x03, 0xAC, 0x4B, 0x43, 0x4D, 0x53, 0x02, 0x10, 0x00, 0x00,
                 0x6D, 0x6E, 0x74, 0x72, 0x52, 0x47, 0x42, 0x20, 0x58, 0x59, 0x5A, 0x20,

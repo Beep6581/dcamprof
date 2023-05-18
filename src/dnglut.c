@@ -189,7 +189,7 @@ dnglut_looktable_new(uint32_t hsmdims[3],
                      enum gc_type gc_type,
                      const struct tone_rep_op_config *ntro_conf)
 {
-    elog("Generating 3D LookTable with %dx%dx%d = %d entries for the neutral tone reproduction operator...\n  0%%", hcount, scount, vcount, hcount*scount*vcount);
+    elog("Generating 3D LookTable with %dx%dx%d = %d entries for the tone reproduction operator...\n  0%%", hcount, scount, vcount, hcount*scount*vcount);
     const m3x3 xyz2rgb = dcp_xyz_D50_to_prophoto_rgb;
     const m3x3 rgb2xyz = m3x3_invert(xyz2rgb);
     v3 *hsm = malloc(hcount * scount * vcount * sizeof(*hsm));

@@ -3544,6 +3544,7 @@ print_usage_and_exit(void)
         "      -n <unique camera name>\n"
         "      -d <profile name>\n"
         "      -c <copyright>\n"
+        "      -s <calibration signature>\n"
         "      -b <baseline exposure offset>\n"
         "      -B don't include default black render = none tag\n"
         "      -i <calibration illuminant1> (default: from source profile)\n"
@@ -5020,6 +5021,7 @@ main(int argc,
         const char *camera_name = NULL;
         const char *description = NULL;
         const char *copyright = NULL;
+        const char *calibration_signature = NULL;
         double baseline_exposure_offset = 0;
         bool skip_black_render_none = false;
         bool enable_3d_hsm = false;
@@ -5047,6 +5049,7 @@ main(int argc,
             case 'n': camera_name = argv[++ai]; break;
             case 'd': description = argv[++ai]; break;
             case 'c': copyright = argv[++ai]; break;
+            case 's': calibration_signature = argv[++ai]; break;
             case 'b': baseline_exposure_offset = atof(argv[++ai]); has_beo = true; break;
             case 'B': skip_black_render_none = true; break;
             case 'i':
@@ -5146,6 +5149,10 @@ main(int argc,
         if (copyright != NULL) {
             free(dcp->copyright);
             dcp->copyright = strdup(copyright);
+        }
+        if (calibration_signature != NULL) {
+            free(dcp->calibration_signature);
+            dcp->calibration_signature = strdup(calibration_signature);
         }
         if (has_beo) {
             dcp->baseline_exposure_offset = baseline_exposure_offset;

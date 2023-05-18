@@ -1,4 +1,4 @@
-INSTALL_PREFIX = /usr/local
+PREFIX = /usr/local
 DCAMPROF_VERSION = $(shell cat VERSION)
 CC = gcc
 CFLAGS = -Wall -std=c99 -g -O2 -D_XOPEN_SOURCE=600 -D__EXTENSIONS__ -fopenmp
@@ -50,8 +50,8 @@ dcamprof: $(DCAMPROF_OBJS)
 	$(CC) -o $@ $(LDFLAGS) $(DCAMPROF_OBJS) -llcms2 -ltiff -lm
 
 install: $(PROGS)
-	install -d $(INSTALL_PREFIX)/bin
-	install $(PROGS) $(INSTALL_PREFIX)/bin
+	install -d $(DESTDIR)$(PREFIX)/bin
+	install $(PROGS) $(DESTDIR)$(PREFIX)/bin
 
 clean:
 	rm -f $(DCAMPROF_OBJS) ${PROGS}
